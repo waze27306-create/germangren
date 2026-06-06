@@ -12,57 +12,59 @@
             width: 100vw; height: 100vh;
             background-color: #000;
             overflow: hidden;
-            touch-action: none; /* Запрещает браузерные жесты */
+            touch-action: none;
         }
         #game-container {
             width: 100vw; height: 100vh;
         }
+        .error-msg { color: white; font-family: sans-serif; text-align: center; padding-top: 20%; }
     </style>
 </head>
 <body>
     <div id="game-container"></div>
 
     <script>
+        // --- ЗАЩИТА ---
         const tg = window.Telegram.WebApp;
+        
+        // 1. Проверка: запущен ли проект в Telegram
+        if (!tg.initData || tg.initData === "") {
+            document.body.innerHTML = "<div class='error-msg'><h1>Эээ, браток, ты не с ТГ зашел, пиздуй-ка ты лесом!</h1></div>";
+            throw new Error("Access Denied");
+        }
+
+        // 2. Проверка: запущен ли проект через твоего бота
+        // ВАЖНО: Замени 123456789 на ID твоего бота!
+        const MY_BOT_ID = 7967862064; 
+        const botId = tg.initDataUnsafe.receiver ? tg.initDataUnsafe.receiver.id : null;
+        
+        if (botId && botId !== MY_BOT_ID) {
+            document.body.innerHTML = "<div class='error-msg'><h1>Нене, браток, соси писю, обойдешься, только в оригинальном боте запущусь!</h1></div>";
+            throw new Error("Access Denied: Wrong Bot");
+        }
+        // --- КОНЕЦ ЗАЩИТЫ ---
+
         tg.ready();
         tg.expand();
 
-        // 1. Принудительный альбомный режим (запрос ориентации)
         if (window.screen.orientation && window.screen.orientation.lock) {
             window.screen.orientation.lock('landscape').catch(() => {});
         }
 
-        // 2. Блокировка закрытия через кнопку "Назад" (нативная кнопка в ТГ)
         tg.enableClosingConfirmation();
 
-        // 3. Обработка нажатия на "крестик" (MainButton или закрытие)
-        // В Telegram Web App нет прямого события на крестик, 
-        // но мы можем перехватить событие закрытия, если пользователь нажал на него
-        tg.onEvent('viewportChanged', () => {
-            // Если нужно, чтобы при попытке закрыть вылезал алерт
-            // tg.showPopup({
-            //     title: 'Выход',
-            //     message: 'Вы уверены, что хотите выйти из игры?',
-            //     buttons: [{type: 'ok', text: 'Да'}, {type: 'cancel'}]
-            // });
-        });
-
-        // 4. Защита от свайпов
         document.body.addEventListener('touchmove', (e) => {
             e.preventDefault();
         }, { passive: false });
 
-        // Запуск Ruffle
         window.RufflePlayer = window.RufflePlayer || {};
         window.addEventListener("load", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
             player.style.width = "100%";
             player.style.height = "100%";
-            
             const container = document.getElementById("game-container");
             container.appendChild(player);
-            
             player.load("touchthegirl.swf"); 
         });
     </script>
