@@ -4,27 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Touch The Girl - WebApp</title>
-    <!-- Подключаем Telegram WebApp API для связи с ботом -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем эмулятор Ruffle -->
     <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
     <style>
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #111; /* Темный фон, чтобы игра смотрелась органично */
-            overflow: hidden; /* Запрещаем прокрутку, чтобы аппка не закрывалась свайпом вниз */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+            touch-action: none; /* Запрещает браузерные жесты */
         }
         #game-container {
-            width: 100%;
-            height: 100%;
-            max-width: 800px; /* Ограничение ширины для планшетов/ПК */
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            width: 100vw; height: 100vh;
         }
     </style>
 </head>
@@ -32,25 +23,46 @@
     <div id="game-container"></div>
 
     <script>
-        // Инициализация Telegram Mini App
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Открываем приложение сразу на весь экран
+        tg.ready();
+        tg.expand();
 
-        // Настройка и запуск флеш-плеера
+        // 1. Принудительный альбомный режим (запрос ориентации)
+        if (window.screen.orientation && window.screen.orientation.lock) {
+            window.screen.orientation.lock('landscape').catch(() => {});
+        }
+
+        // 2. Блокировка закрытия через кнопку "Назад" (нативная кнопка в ТГ)
+        tg.enableClosingConfirmation();
+
+        // 3. Обработка нажатия на "крестик" (MainButton или закрытие)
+        // В Telegram Web App нет прямого события на крестик, 
+        // но мы можем перехватить событие закрытия, если пользователь нажал на него
+        tg.onEvent('viewportChanged', () => {
+            // Если нужно, чтобы при попытке закрыть вылезал алерт
+            // tg.showPopup({
+            //     title: 'Выход',
+            //     message: 'Вы уверены, что хотите выйти из игры?',
+            //     buttons: [{type: 'ok', text: 'Да'}, {type: 'cancel'}]
+            // });
+        });
+
+        // 4. Защита от свайпов
+        document.body.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Запуск Ruffle
         window.RufflePlayer = window.RufflePlayer || {};
-        window.addEventListener("load", (event) => {
+        window.addEventListener("load", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
-            
-            // Настройки стиля плеера
             player.style.width = "100%";
             player.style.height = "100%";
             
             const container = document.getElementById("game-container");
             container.appendChild(player);
             
-            // Загружаем основной файл игры. 
-            // Если нужен лоадер, поменяй на "ttg_loader.swf"
             player.load("touchthegirl.swf"); 
         });
     </script>
