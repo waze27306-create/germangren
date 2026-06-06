@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Touch The Girl - WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
@@ -34,7 +34,6 @@
         }
 
         // 2. Проверка: запущен ли проект через твоего бота
-        // ВАЖНО: Замени 123456789 на ID твоего бота!
         const MY_BOT_ID = 7967862064; 
         const botId = tg.initDataUnsafe.receiver ? tg.initDataUnsafe.receiver.id : null;
         
@@ -47,16 +46,25 @@
         tg.ready();
         tg.expand();
 
+        // Принудительный фуллскрин
+        if (tg.requestFullscreen) {
+            tg.requestFullscreen();
+        }
+
+        // Принудительный альбомный режим
         if (window.screen.orientation && window.screen.orientation.lock) {
             window.screen.orientation.lock('landscape').catch(() => {});
         }
 
+        // Подтверждение при закрытии (крестик)
         tg.enableClosingConfirmation();
 
+        // Защита от свайпов
         document.body.addEventListener('touchmove', (e) => {
             e.preventDefault();
         }, { passive: false });
 
+        // Запуск Ruffle
         window.RufflePlayer = window.RufflePlayer || {};
         window.addEventListener("load", () => {
             const ruffle = window.RufflePlayer.newest();
